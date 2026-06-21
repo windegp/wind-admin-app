@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Browser } from '@capacitor/browser';
 
-// 🔥 هذا الملف بيشتغل فقط للحظة الأولى من تشغيل التطبيق، بعدها
-// بيحوّل الشاشة بالكامل لفتح windeg.com/admin عن طريق window.location.href
-// (مش عن طريق server.url في capacitor.config.ts، عشان الكود هنا
-// - تسجيل التوكن الـ Native - يتنفذ فعليًا الأول).
+// 🔥 هذا الملف بيشتغل أول ما التطبيق يفتح: يطلب إذن الإشعارات، يسجل
+// التوكن الـ Native، يبعته للسيرفر، وبعدين يفتح windeg.com.
 //
-// الكود هنا مسؤول عن: طلب إذن الإشعارات، تسجيل التوكن الـ Native،
-// إرساله لباك إندك عشان يُحفظ في adminTokens، وبعدين التحويل للموقع.
+// ⚠️ مهم: التحويل بيتم عن طريق Browser.open (Chrome Custom Tabs) مش
+// window.location.href جوه نفس الـ WebView. السبب: جوجل بيمنع تسجيل
+// الدخول بحساب Google من جوه أي WebView مدمج جوه تطبيق (disallowed_useragent)
+// — وده اللي كان بيسبب "بتدوس تسجيل دخول وبيرميك في المتصفح من غير ما
+// يكمل". Custom Tabs مختلفة: بتشارك جلسة Chrome العادية (يعني لو
+// مسجل دخول في Chrome أصلاً، هيدخل على طول من غير ما يطلب تسجيل دخول
+// تاني)، ومسموح بيها رسميًا من جوجل لتسجيل الدخول.
 
 const ADMIN_URL = 'https://windeg.com/admin';
 const REDIRECT_DELAY_MS = 1200; // عشان المستخدم يلحق يشوف رسالة الحالة قبل التحويل
 
-function goToAdmin() {
-  setTimeout(() => {
-    window.location.href = ADMIN_URL;
-  }, REDIRECT_DELAY_MS);
+// 🔥 guard بسيط عشان لو التطبيق اتفتح بالضغط على إشعار (تاب)، منفتحش
+// تابين مختلفين (واحد عام لـ /admin وواحد للطلب المحدد) — اللي يحصل
+// الأول بياخد الأولوية وبيقفل التاني.
+let hasOpened = false;
+function openAdmin(url: string) {
+  if (hasOpened) return;
+  hasOpened = true;
+  Browser.open({ url });
 }
 
 function App() {
@@ -28,7 +36,7 @@ function App() {
 
         if (permStatus.receive !== 'granted') {
           setStatus('تم رفض إذن الإشعارات — هتفتح لوحة التحكم من غير صوت مخصص.');
-          goToAdmin();
+          setTimeout(() => openAdmin(ADMIN_URL), REDIRECT_DELAY_MS);
           return;
         }
 
@@ -49,27 +57,34 @@ function App() {
           } finally {
             // 🔥 سواء التسجيل نجح أو فشل، التطبيق لازم يكمل لوحة التحكم
             // دايمًا — التطبيق مش المفروض يفضل واقف على الشاشة دي أبدًا.
-            goToAdmin();
+            setTimeout(() => openAdmin(ADMIN_URL), REDIRECT_DELAY_MS);
           }
         });
 
         PushNotifications.addListener('registrationError', (err) => {
           setStatus('فشل تسجيل الإشعارات: ' + JSON.stringify(err));
           console.error('Registration error:', err.error);
-          goToAdmin();
+          setTimeout(() => openAdmin(ADMIN_URL), REDIRECT_DELAY_MS);
         });
 
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          // التطبيق فاتح قدام المستخدم والإشعار وصل — الصوت بيتشغل من
+          // النظام نفسه (channel) مش محتاجين نعمل حاجة هنا.
           console.log('Notification received (foreground):', notification);
         });
 
+        // 🔥 دوس على الإشعار = روح على طول لصفحة الطلب نفسه، مش الصفحة
+        // العامة. شغال سواء التطبيق كان في الخلفية أو مقفول تمامًا —
+        // Capacitor بيحتفظ بآخر إشعار اتدوس عليه ويبعته هنا أول ما
+        // الـ listener يتسجل.
         PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-          console.log('Notification tapped:', action);
+          const url = action.notification?.data?.url;
+          openAdmin(url || ADMIN_URL);
         });
       } catch (err) {
         setStatus('حدث خطأ غير متوقع: ' + String(err));
         console.error(err);
-        goToAdmin();
+        setTimeout(() => openAdmin(ADMIN_URL), REDIRECT_DELAY_MS);
       }
     };
 
