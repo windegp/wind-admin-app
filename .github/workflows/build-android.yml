@@ -34,11 +34,23 @@ jobs:
       - name: Build web assets
         run: npm run build
 
-      - name: Add Android platform
-        run: npx cap add android
+      
+      - name: Copy google-services.json into Android project
+        run: cp google-services.json android/app/google-services.json
 
       - name: Sync Capacitor
         run: npx cap sync android
+
+      # 🔥 خطوتين جديدتين — كانوا ناقصين، وهما سبب عدم اكتمال
+      # تفعيل Firebase Native + الصوت المخصص على أندرويد:
+
+      - name: Place google-services.json (Firebase native config)
+        run: cp google-services.json android/app/google-services.json
+
+      - name: Add custom notification sound as Android raw resource
+        run: |
+          mkdir -p android/app/src/main/res/raw
+          cp cha_ching.mp3 android/app/src/main/res/raw/cha_ching.mp3
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
