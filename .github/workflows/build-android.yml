@@ -34,13 +34,10 @@ jobs:
       - name: Build web assets
         run: npm run build
 
-      - name: Add Android platform
-        run: npx cap add android
-
       - name: Copy google-services.json into Android project
         run: cp google-services.json android/app/google-services.json
 
-      - name: Sync Capacitor
+      - name: Sync Capacitor (updates web assets + native deps, keeps our native customizations)
         run: npx cap sync android
 
       - name: Make gradlew executable

@@ -2,10 +2,21 @@ import { useEffect, useState } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 
 // 🔥 هذا الملف بيشتغل فقط للحظة الأولى من تشغيل التطبيق، بعدها
-// Capacitor بيوجّه الشاشة بالكامل لفتح windeg.com/admin مباشرة
-// (مُعرّف في capacitor.config.ts عبر server.url).
-// الكود هنا مسؤول فقط عن: طلب إذن الإشعارات، تسجيل التوكن الـ Native،
-// وإرساله لباك إندك عشان يُحفظ في adminTokens.
+// بيحوّل الشاشة بالكامل لفتح windeg.com/admin عن طريق window.location.href
+// (مش عن طريق server.url في capacitor.config.ts، عشان الكود هنا
+// - تسجيل التوكن الـ Native - يتنفذ فعليًا الأول).
+//
+// الكود هنا مسؤول عن: طلب إذن الإشعارات، تسجيل التوكن الـ Native،
+// إرساله لباك إندك عشان يُحفظ في adminTokens، وبعدين التحويل للموقع.
+
+const ADMIN_URL = 'https://windeg.com/admin';
+const REDIRECT_DELAY_MS = 1200; // عشان المستخدم يلحق يشوف رسالة الحالة قبل التحويل
+
+function goToAdmin() {
+  setTimeout(() => {
+    window.location.href = ADMIN_URL;
+  }, REDIRECT_DELAY_MS);
+}
 
 function App() {
   const [status, setStatus] = useState('جاري التحقق من صلاحيات الإشعارات...');
@@ -16,7 +27,8 @@ function App() {
         const permStatus = await PushNotifications.requestPermissions();
 
         if (permStatus.receive !== 'granted') {
-          setStatus('تم رفض إذن الإشعارات — افتح إعدادات التطبيق لتفعيلها يدويًا.');
+          setStatus('تم رفض إذن الإشعارات — هتفتح لوحة التحكم من غير صوت مخصص.');
+          goToAdmin();
           return;
         }
 
@@ -32,14 +44,19 @@ function App() {
             });
             setStatus('تم تسجيل الجهاز بنجاح ✅');
           } catch (err) {
-            setStatus('فشل إرسال التوكن للسيرفر — تحقق من الاتصال.');
+            setStatus('فشل إرسال التوكن للسيرفر — هتفتح لوحة التحكم وهنحاول تاني المرة الجاية.');
             console.error('Token send error:', err);
+          } finally {
+            // 🔥 سواء التسجيل نجح أو فشل، التطبيق لازم يكمل لوحة التحكم
+            // دايمًا — التطبيق مش المفروض يفضل واقف على الشاشة دي أبدًا.
+            goToAdmin();
           }
         });
 
         PushNotifications.addListener('registrationError', (err) => {
           setStatus('فشل تسجيل الإشعارات: ' + JSON.stringify(err));
           console.error('Registration error:', err.error);
+          goToAdmin();
         });
 
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
@@ -52,6 +69,7 @@ function App() {
       } catch (err) {
         setStatus('حدث خطأ غير متوقع: ' + String(err));
         console.error(err);
+        goToAdmin();
       }
     };
 
