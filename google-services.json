@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "596996130193",
+    "firebase_url": "https://wind-reviews-default-rtdb.firebaseio.com",
+    "project_id": "wind-reviews",
+    "storage_bucket": "wind-reviews.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596996130193:android:bd802ab82cdb09fdeb8630",
+        "android_client_info": {
+          "package_name": "com.windeg.admin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "596996130193-9rdsaeajjap893ga5mp7uoplj1q97en3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxr11SVcN3TNO_fm7e2Q9MuesRzcfKnB8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "596996130193-9rdsaeajjap893ga5mp7uoplj1q97en3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
