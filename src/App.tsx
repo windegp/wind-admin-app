@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 
-// 🔥 هذا الملف بيشتغل فقط للحظة الأولى من تشغيل التطبيق، بعدها
-// Capacitor بيوجّه الشاشة بالكامل لفتح windeg.com/admin مباشرة
-// (مُعرّف في capacitor.config.ts عبر server.url).
-// الكود هنا مسؤول فقط عن: طلب إذن الإشعارات، تسجيل التوكن الـ Native،
-// وإرساله لباك إندك عشان يُحفظ في adminTokens.
+// 🔥 هذا الملف بيشتغل للحظة الأولى من تشغيل التطبيق فقط: بيطلب إذن الإشعارات،
+// بيسجّل التوكن الـ Native، وبيرسله لباك إندك عشان يُحفظ في adminTokens.
+// بعد تسجيل التوكن (أو فشله/رفضه) بيحوّل الشاشة لفتح windeg.com/admin مباشرة
+// عن طريق window.location.href (مفيش server.url في capacitor.config.ts،
+// والتنقّل مسموح عبر allowNavigation لدومين windeg.com).
+
+const ADMIN_URL = 'https://windeg.com/admin';
 
 function App() {
   const [status, setStatus] = useState('جاري التحقق من صلاحيات الإشعارات...');
 
   useEffect(() => {
+    const goToDashboard = () => {
+      window.location.href = ADMIN_URL;
+    };
+
     const setup = async () => {
+      // ضمان فتح لوحة التحكم حتى لو ما وصلش حدث التسجيل (إذن مرفوض/خطأ)
+      const redirectTimer = setTimeout(goToDashboard, 8000);
+
       try {
-        const permStatus = await PushNotifications.requestPermissions();
-
-        if (permStatus.receive !== 'granted') {
-          setStatus('تم رفض إذن الإشعارات — افتح إعدادات التطبيق لتفعيلها يدويًا.');
-          return;
-        }
-
-        await PushNotifications.register();
-        setStatus('جاري تسجيل الجهاز...');
-
+        // نضيف المستمعين قبل register() عشان ما نفوّتش حدث التوكن
         PushNotifications.addListener('registration', async (token) => {
           try {
             await fetch('https://windeg.com/api/register-admin-token', {
@@ -34,6 +34,9 @@ function App() {
           } catch (err) {
             setStatus('فشل إرسال التوكن للسيرفر — تحقق من الاتصال.');
             console.error('Token send error:', err);
+          } finally {
+            clearTimeout(redirectTimer);
+            goToDashboard();
           }
         });
 
@@ -49,6 +52,16 @@ function App() {
         PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
           console.log('Notification tapped:', action);
         });
+
+        const permStatus = await PushNotifications.requestPermissions();
+
+        if (permStatus.receive !== 'granted') {
+          setStatus('تم رفض إذن الإشعارات — افتح إعدادات التطبيق لتفعيلها يدويًا.');
+          return;
+        }
+
+        await PushNotifications.register();
+        setStatus('جاري تسجيل الجهاز...');
       } catch (err) {
         setStatus('حدث خطأ غير متوقع: ' + String(err));
         console.error(err);
