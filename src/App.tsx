@@ -45,14 +45,26 @@ function App() {
 
         PushNotifications.addListener('registration', async (token) => {
           try {
-            await fetch('https://windeg.com/api/register-admin-token', {
+            const res = await fetch('https://windeg.com/api/register-admin-token', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ token: token.value, platform: 'android-native' }),
             });
+
+            // 🔥 fetch() مبيرميش Exception غير على فشل الشبكة بس — لو
+            // السيرفر رفض الطلب (مثلاً Firestore permission-denied)،
+            // fetch() هيكمل عادي بـ res.ok = false من غير ما يدخل catch
+            // خالص. عشان كده لازم نتأكد من res.ok يدويًا، وإلا هنفضل
+            // نقول "تم التسجيل بنجاح" حتى لو التسجيل فشل فعليًا في
+            // السيرفر (وده بالظبط اللي كان بيحصل قبل كده).
+            if (!res.ok) {
+              const errBody = await res.text().catch(() => '');
+              throw new Error(`Server rejected token (${res.status}): ${errBody}`);
+            }
+
             setStatus('تم تسجيل الجهاز بنجاح ✅');
           } catch (err) {
-            setStatus('فشل إرسال التوكن للسيرفر — هتفتح لوحة التحكم وهنحاول تاني المرة الجاية.');
+            setStatus('فشل تسجيل الجهاز فعليًا: ' + String(err));
             console.error('Token send error:', err);
           } finally {
             // 🔥 سواء التسجيل نجح أو فشل، التطبيق لازم يكمل لوحة التحكم
