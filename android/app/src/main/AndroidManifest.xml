@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -48,6 +49,20 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- 🔥 WindMessagingService بيورّث من MessagingService بتاع Capacitor
+             (اللي بيورّث من FirebaseMessagingService)، عشان يضيف large icon
+             (لوجو WIND) على كل إشعار يوصل والتطبيق شغال في الـ foreground.
+             tools:replace بيقول للـ merger: استخدم الـ service ده وتجاهل
+             اللي جاي من الـ plugin's manifest تلقائياً. -->
+        <service
+            android:name=".WindMessagingService"
+            android:exported="false"
+            tools:replace="android:name">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
     <!-- Permissions -->
