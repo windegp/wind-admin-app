@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">WIND Admin</string>
-    <string name="title_activity_main">WIND Admin</string>
+    <string name="app_name">WIND Shopping</string>
+    <string name="title_activity_main">WIND Shopping</string>
     <string name="package_name">com.windeg.admin</string>
     <string name="custom_url_scheme">com.windeg.admin</string>
 </resources>
