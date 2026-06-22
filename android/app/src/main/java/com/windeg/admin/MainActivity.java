@@ -19,7 +19,7 @@ public class MainActivity extends BridgeActivity {
     // ⚠️ صوت القناة بيتقفل عند أول إنشاء على الجهاز ولا يتغير بعدها حتى
     // لو غيّرنا الكود — لو محتاجين نغيّر الصوت يوماً، لازم ID قناة جديد
     // (مش order_alerts) عشان أجهزة المستخدمين القديمة تاخد الصوت الجديد.
-    private static final String CHANNEL_ID = "order_alerts_v2";
+    private static final String CHANNEL_ID = "order_alerts_v3";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

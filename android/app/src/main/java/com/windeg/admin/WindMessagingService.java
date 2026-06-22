@@ -28,7 +28,7 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class WindMessagingService extends MessagingService {
 
-    private static final String CHANNEL_ID = "order_alerts_v2";
+    private static final String CHANNEL_ID = "order_alerts_v3";
     private static final int NOTIFICATION_ID_BASE = 2000;
 
     @Override
