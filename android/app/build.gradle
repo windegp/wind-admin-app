@@ -40,6 +40,12 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    // 🔥 مطلوبة عشان WindMessagingService يقدر يورّث من MessagingService
+    // بتاع Capacitor ويستخدم RemoteMessage و FirebaseMessagingService مباشرة.
+    // الـ plugin بيجيبها كـ transitive dependency لكن الـ compiler محتاج
+    // يشوفها explicitly في الـ app module عشان يقدر يكمبايل كلاسات التطبيق.
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
 }
 
 apply from: 'capacitor.build.gradle'

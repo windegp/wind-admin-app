@@ -58,7 +58,7 @@
         <service
             android:name=".WindMessagingService"
             android:exported="false"
-            tools:replace="android:name">
+            tools:node="replace">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
