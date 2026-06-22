@@ -62,6 +62,7 @@ public class MainActivity extends BridgeActivity {
         channel.setDescription("صوت تنبيه مخصص لما يجي أوردر جديد على WIND");
         channel.setSound(soundUri, audioAttributes);
         channel.enableVibration(true);
+        channel.setShowBadge(true);
 
         manager.createNotificationChannel(channel);
     }
